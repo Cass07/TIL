@@ -1,0 +1,51 @@
+### JWT
+- JWT는 JSON Web Token의 약자로, JSON 객체를 사용하여 토큰 자체에 정보를 저장하고 있는 Web Token
+- 쿠키와 세션의 단점을 해소하기 위한 기술
+  - 쿠키는 노출시 보안에 취약하고, 용량이 제한되어 있으며 (4kb), 사용자가 손쉽게 내용을 변조할 수 있으며, 브라우저간 공유가 불가능하다
+  - 세션은 서버에 저장되기에 서버에 부하를 주며, 세션 저장 서버에 문제가 생기면 모든 인증이 불가능해지며, stateful하며, 세션 ID를 호출 시마다 조회해야 할 필요가 있다
+- stateless하고, 클라이언트나 서버에 저장되지 않으므로 토큰 저장소가 필요하지 않으며, 암호화 과정을 거치므로 쉽게 변조하기 어렵다
+  - 단, 토큰이 유출되면 일반적으로는 사용을 막을 수 없으므로, access/refresh token 등의 방법을 추가로 사용한다
+
+#### JWT의 구조
+- Header, Payload, Signature로 구성되며, 각각 Base64로 인코딩되어 있다
+  - Header: 토큰의 타입과 암호화 알고리즘을 저장
+  - Payload: 사용자와 토큰에 대한 정보를 Key-Value 형태로 저장, 표준으로 정의된 key는 다음과 같음 (단 무조건 지켜야 하는 것은 아님). Payload는 Base64로만 인코딩되어 있으므로, 절대 민감정보를 담아서는 안 된다
+    - iss: 토큰 발급자
+    - sub: 토큰의 제목, 보통은 사용자의 식별 값을 사용(uid 등등..)
+    - aud: 토큰 대상자
+    - exp: 토큰 만료 시간
+    - nbf: Not Before, 토큰 활성 시간
+    - iat: 토큰 발급 시간
+    - jti: JWT ID, 토큰 식별자 (issuer가 여럿일때 구분하기 위해서 쓴다고함)
+  - Signature: 토큰의 서명
+    - Header의 base64 인코딩 값 + "." + Payload의 base64 인코딩 값 을, 서버의 개인키로 암호화한 값 (HMACSHA256, RSA, ECDSA 등의 알고리즘 사용)
+
+#### Access/Refresh Token
+- JWT의 단점 중 하나인 `토큰이 탈취당할 경우 제 3자의 사용을 막을 수 없다`라는 단점을 보완하기 위한 방법
+  - JWT는 서버에 저장되지 않으므로 임의로 토큰의 사용을 막을 수 없으므로, 탈취 시 사용을 막을 수 없다
+  - 토큰의 유효기간을 짧게 한다면, 탈취되어도 사용 가능한 기간이 짧아지지만, 재발급 주기가 짧아지게 된다
+  - 유효기간을 짧게 하면서 재발급의 불편함을 해결하기 위한 방법
+
+##### 구조
+- Access Token: 사용자 인증을 위한 토큰으로, 짧은 유효시간
+- Refresh Token: Access Token을 재발급 받기 위한 토큰으로, 긴 유효시간
+- 발급된 Refresh 토큰은 저장소에 저장하고, 사용 가능 여부 또한 저장하여 실제 유효기간이 만료되기 전에 임의로 만료시킬 수 있다
+
+##### 사용 과정
+1. 사용자가 로그인하면, Access Token과 Refresh Token을 발급한다
+2. Access Token을 사용해서 API를 호출할 수 있다
+3. Access Token이 만료되면, Refresh Token과 Access Token을 사용해서 새로운 Access Token을 발급 요청을 하여, 조건에 맞으면 발급한다
+4. 사용자가 로그아웃하면, Refresh Token을 만료한다
+
+##### 토큰의 만료 상황별 행동
+- 해당 케이스를 정확히 따르지 않고, 임의의 방법으로 처리하는 경우도 있음
+1. Access Token만 만료: Refresh Token을 사용해서 새로운 Access Token을 발급한다
+2. 두 토큰이 모두 만료 : 사용자에게 다시 로그인을 요청한다
+3. Refresh Token만 만료: Access Token의 유효성을 검증하여 새로 Refresh Token을 발급한다
+
+##### Refresh Token 탈취 위험을 줄이는 Refresh Token Rotation
+- Access Token의 유효시간은 줄였지만, Refresh Token은 길기 때문에 탈취 시 여전히 악용 위험이 있다
+- 이를 위해서 Refresh Token Rotation을 사용한다
+  - Access Token을 발급할 때마다, 새로운 Refresh Token을 다시 발급한다 (기존 Refresh Token은 만료시킨다)
+  - 이를 통해, 탈취된 Refresh Token의 실질적인 유효기간을 줄일 수 있다
+  - 또한, Refresh Token이 탈취당해서 다른 곳에서 이용된다면, 부정 사용을 사용자가 바로 인지할 수 있다 (사용자가 가진 토큰이 만료되므로)
