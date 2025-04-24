@@ -18,7 +18,7 @@
     - iat: 토큰 발급 시간
     - jti: JWT ID, 토큰 식별자 (issuer가 여럿일때 구분하기 위해서 쓴다고함)
   - Signature: 토큰의 서명
-    - Header의 base64 인코딩 값 + "." + Payload의 base64 인코딩 값 을, 서버의 개인키로 암호화한 값 (HMACSHA256, RSA, ECDSA 등의 알고리즘 사용)
+    - Header의 base64 인코딩 값 + "." + Payload의 base64 인코딩 값 을, 서버의 개인키로 해싱한 값 (HMACSHA256, RSA, ECDSA 등의 알고리즘 사용)
 
 #### Access/Refresh Token
 - JWT의 단점 중 하나인 `토큰이 탈취당할 경우 제 3자의 사용을 막을 수 없다`라는 단점을 보완하기 위한 방법

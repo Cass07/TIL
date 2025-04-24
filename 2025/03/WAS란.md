@@ -21,4 +21,22 @@
   - DispatcherServletAutoConfiguration 클래스에서 DispatcherServlet의 생성과 등록을 실행
 
 - 서블릿 컨테이너는 추상화되어 있어서 다른 WAS를 사용할 수 있도록 하기 위해서, 서블릿의 생성과 서블릿 컨테이너의 생성은 별도로 분리되어 있다
-- 
+
+
+#### 서블릿의 동작 플로우
+- 클라이언트가 HTTP Request
+- Servlet Container가 Request를 받음
+  - HttpServletRequest, HttpServletResponse 객체를 생성
+- web.xml을 기반으로, 요청이 어느 서블릿 객체를 필요로 하는지 찾음
+- 찾은 서블릿 객체의 service 메소드를 호출하고, doGet/doPost를 호출
+- 해당 메소드는 동적 페이지를 생성하고, HttpServletResponse 객체에 응답을 보냄
+- 응답이 끝나면 두 객체를 소멸시킴
+
+#### 서블릿 컨테이너란
+- 웹 서버 통신 지원
+- 서블릿 생명주기 관리
+- 멀티스레드 지원 및 관리
+  - 요청이 올 떄마다 알아서 스레드를 생성하고 없애줌
+- 선언적 보안 관리
+  - xml등에 서블릿의 보안 설정을 해 두면 이를 통해 인증/인가를 해줌
+
